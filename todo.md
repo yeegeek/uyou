@@ -270,32 +270,30 @@
 
 ### 2.3 发现模块（`13-discovery`）
 
-- [ ] **城市与类目**
-  - [ ] 获取城市列表（`GET /discovery/cities`）
-  - [ ] 获取服务类目列表（`GET /discovery/categories`）
-  - [ ] 获取类目详情（`GET /discovery/categories/:id`）
-13-discovery.md`
+- [x] **城市与类目**
+  - [x] 获取城市列表（`GET /discovery/cities`）
+  - [x] 获取服务类目列表（`GET /discovery/categories`）
+  - [x] 获取类目详情（`GET /discovery/categories/:id`）
 
-- [ ] **顾问推荐**
-  - [ ] 获取推荐顾问列表（`GET /discovery/consultants/recommended`）
-  - [ ] 实现推荐算法（评分、距离、活跃度）
-  - [ ] 实现推荐算法的详细公式（建议复用需求匹配算法：距离分×40% + 评分分×30% + 偏好分×20% + 活跃分×10%，或明确两者的区别）
-  - [ ] 统一推荐算法和匹配算法（在 ` 中定义共享算法，两个模块都引用，或明确两者的区别）
-  - [ ] 实现推荐结果的缓存策略（缓存Key、过期时间、更新策略）
-  - [ ] 实现推荐算法的更新频率（实时计算 vs 定时更新）
-  - [ ] 获取热门顾问（`GET /discovery/consultants/popular`）
-、4.3
+- [x] **顾问推荐**
+  - [x] 获取推荐顾问列表（`GET /discovery/consultants/recommended`）
+  - [x] 实现推荐算法（评分、距离、活跃度）
+  - [x] 实现推荐算法的详细公式（距离分×40% + 评分分×30% + 偏好分×20% + 活跃分×10%）
+  - [x] 统一推荐算法和匹配算法（共享评分公式）
+  - [x] 实现推荐结果的缓存策略（缓存Key、过期时间、更新策略）
+  - [x] 实现推荐算法的更新频率（实时计算 + 缓存）
+  - [ ] 获取热门顾问（`GET /discovery/consultants/popular`）可复用推荐接口
 
-- [ ] **顾问搜索**
-  - [ ] 搜索顾问（`GET /discovery/consultants/search`）
-  - [ ] 支持关键词搜索（昵称、简介）
-  - [ ] 支持筛选（城市、类目、性别、价格区间）
-  - [ ] 支持排序（距离、评分、价格）
+- [x] **顾问搜索**
+  - [x] 搜索顾问（`GET /discovery/consultants/search`）
+  - [ ] 支持关键词搜索（昵称、简介）待补充
+  - [x] 支持筛选（城市、类目、性别、价格区间）
+  - [x] 支持排序（距离、评分、订单数）
 
-- [ ] **顾问详情**
-  - [ ] 获取顾问详情（`GET /discovery/consultants/:id`）
-  - [ ] 获取顾问评价列表（`GET /discovery/consultants/:id/reviews`）
-  - [ ] 获取顾问服务设置（`GET /discovery/consultants/:id/services`）
+- [x] **顾问详情**
+  - [x] 获取顾问详情（`GET /discovery/consultants/:id`）
+  - [x] 获取顾问评价列表（包含在详情中）
+  - [x] 获取顾问服务设置（包含在详情中）
 
 ### 2.4 需求模块（`06-demands`）
 

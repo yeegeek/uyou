@@ -12,6 +12,7 @@ import { DatabaseModule } from './database/database.module';
 import { CommonModule } from './common/common.module';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
+import { DiscoveryModule } from './discovery/discovery.module';
 
 import { ResponseInterceptor } from './common/interceptors/response.interceptor';
 import { HttpExceptionFilter, AllExceptionsFilter } from './common/filters/http-exception.filter';
@@ -24,6 +25,7 @@ import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
     CommonModule,
     AuthModule,
     UsersModule,
+    DiscoveryModule,
     ThrottlerModule.forRoot([
       {
         ttl: 60000,
