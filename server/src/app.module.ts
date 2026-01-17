@@ -15,6 +15,7 @@ import { UsersModule } from './users/users.module';
 import { DiscoveryModule } from './discovery/discovery.module';
 import { DemandsModule } from './demands/demands.module';
 import { OrdersModule } from './orders/orders.module';
+import { ReviewsModule } from './reviews/reviews.module';
 
 import { ResponseInterceptor } from './common/interceptors/response.interceptor';
 import { HttpExceptionFilter, AllExceptionsFilter } from './common/filters/http-exception.filter';
@@ -30,6 +31,7 @@ import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
     DiscoveryModule,
     DemandsModule,
     OrdersModule,
+    ReviewsModule,
     ThrottlerModule.forRoot([
       {
         ttl: 60000,
