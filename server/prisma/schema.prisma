@@ -1,0 +1,678 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [postgis]
+}
+
+// ============================================
+// 共享模块 - 城市和服务类目
+// ============================================
+
+model City {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name      String   @db.VarChar(50)
+  province  String   @db.VarChar(50)
+  code      String   @unique @db.VarChar(20)
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamp(6)
+
+  users                User[]
+  consultantServiceAreas ConsultantServiceArea[]
+
+  @@index([isActive])
+  @@map("cities")
+}
+
+model ServiceCategory {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name        String   @db.VarChar(50)
+  icon        String?  @db.VarChar(500)
+  description String?  @db.VarChar(200)
+  sortOrder   Int      @default(0) @map("sort_order")
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamp(6)
+
+  consultantServices ConsultantService[]
+  demands            Demand[]
+
+  @@index([isActive, sortOrder])
+  @@map("service_categories")
+}
+
+// ============================================
+// 用户模块
+// ============================================
+
+model User {
+  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  phone          String    @unique @db.VarChar(20) // 加密存储
+  nickname       String    @db.VarChar(50)
+  avatar         String?   @db.VarChar(500)
+  gender         Int       @default(0) @db.SmallInt // 0未知/1男/2女
+  birthday       DateTime? @db.Date
+  bio            String?   @db.VarChar(500)
+  cityId         String?   @map("city_id") @db.Uuid
+  wxOpenid       String?   @unique @map("wx_openid") @db.VarChar(100)
+  wxUnionid      String?   @unique @map("wx_unionid") @db.VarChar(100)
+  isConsultant   Boolean   @default(false) @map("is_consultant")
+  status         Int       @default(1) @db.SmallInt // 0禁用/1正常
+  loginAt        DateTime? @map("login_at") @db.Timestamp(6)
+  lastActiveIp   String?   @map("last_active_ip") @db.VarChar(50)
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamp(6)
+
+  city City? @relation(fields: [cityId], references: [id])
+
+  verification      UserVerification?
+  emergencyContacts UserEmergencyContact[]
+  favorites         UserFavorite[]         @relation("UserFavorites")
+  favoritedBy       UserFavorite[]         @relation("FavoritedUsers")
+  blocks            UserBlock[]            @relation("UserBlocks")
+  blockedBy         UserBlock[]            @relation("BlockedUsers")
+  consultant        Consultant?
+  demandsAsUser     Demand[]               @relation("UserDemands")
+  ordersAsUser      Order[]                @relation("UserOrders")
+  paymentsAsUser    Payment[]              @relation("UserPayments")
+  reviewsAsReviewer Review[]               @relation("ReviewerReviews")
+  reviewsAsReviewee Review[]               @relation("RevieweeReviews")
+  conversations     ConversationParticipant[]
+  messages          Message[]
+  notifications     Notification[]
+  complaintsAsReporter Complaint[]         @relation("ReporterComplaints")
+  complaintsAsReported Complaint[]         @relation("ReportedComplaints")
+
+  @@index([phone])
+  @@index([wxOpenid])
+  @@index([cityId])
+  @@index([isConsultant])
+  @@index([lastActiveIp])
+  @@map("users")
+}
+
+model UserVerification {
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId          String    @unique @map("user_id") @db.Uuid
+  realName        String    @map("real_name") @db.VarChar(50) // 加密存储
+  idCardNo        String    @map("id_card_no") @db.VarChar(100) // 加密存储
+  idCardFront     String?   @map("id_card_front") @db.VarChar(500)
+  idCardBack      String?   @map("id_card_back") @db.VarChar(500)
+  facePhoto       String?   @map("face_photo") @db.VarChar(500)
+  faceSimilarity  Decimal?  @map("face_similarity") @db.Decimal(5, 2)
+  status          Int       @default(0) @db.SmallInt // 0待审核/1通过/2拒绝
+  rejectReason    String?   @map("reject_reason") @db.VarChar(200)
+  verifiedAt      DateTime? @map("verified_at") @db.Timestamp(6)
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt       DateTime  @updatedAt @map("updated_at") @db.Timestamp(6)
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([status])
+  @@map("user_verifications")
+}
+
+model UserEmergencyContact {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  name      String   @db.VarChar(50)
+  phone     String   @db.VarChar(20)
+  relation  String?  @db.VarChar(20)
+  isPrimary Boolean  @default(false) @map("is_primary")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamp(6)
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@map("user_emergency_contacts")
+}
+
+model UserFavorite {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId       String   @map("user_id") @db.Uuid
+  targetId     String   @map("target_id") @db.Uuid
+  favoriteType Int      @default(1) @map("favorite_type") @db.SmallInt // 1普通收藏/2特别关注
+  remark       String?  @db.VarChar(100)
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamp(6)
+
+  user   User @relation("UserFavorites", fields: [userId], references: [id])
+  target User @relation("FavoritedUsers", fields: [targetId], references: [id])
+
+  @@unique([userId, targetId])
+  @@index([userId])
+  @@index([targetId])
+  @@map("user_favorites")
+}
+
+model UserBlock {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  blockedId String   @map("blocked_id") @db.Uuid
+  reason    String?  @db.VarChar(200)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamp(6)
+
+  user    User @relation("UserBlocks", fields: [userId], references: [id])
+  blocked User @relation("BlockedUsers", fields: [blockedId], references: [id])
+
+  @@unique([userId, blockedId])
+  @@index([userId])
+  @@index([blockedId])
+  @@map("user_blocks")
+}
+
+// ============================================
+// 顾问模块
+// ============================================
+
+model Consultant {
+  id                String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId            String    @unique @map("user_id") @db.Uuid
+  photos            String[]  @db.VarChar(500)
+  videoIntro        String?   @map("video_intro") @db.VarChar(500)
+  selfIntro         String?   @map("self_intro") @db.Text
+  experience        String?   @db.Text
+  tags              String[]  @db.VarChar(50)
+  rating            Decimal   @default(0) @db.Decimal(3, 2) // 0.00-5.00
+  reviewCount       Int       @default(0) @map("review_count")
+  orderCount        Int       @default(0) @map("order_count")
+  status            Int       @default(0) @db.SmallInt // 0待审核/1已通过/2已拒绝/3已禁用
+  rejectReason      String?   @map("reject_reason") @db.VarChar(200)
+  approvedAt        DateTime? @map("approved_at") @db.Timestamp(6)
+  trainingStatus    Int       @default(0) @map("training_status") @db.SmallInt // 0未开始/1进行中/2已完成
+  examScore         Int?      @map("exam_score")
+  examPassedAt      DateTime? @map("exam_passed_at") @db.Timestamp(6)
+  onlineStatus      Int       @default(0) @map("online_status") @db.SmallInt // 0离线/1在线/2忙碌
+  lastOnlineAt      DateTime? @map("last_online_at") @db.Timestamp(6)
+  creditScore       Int       @default(100) @map("credit_score") // 0-100
+  totalIncome       Decimal   @default(0) @map("total_income") @db.Decimal(10, 2)
+  pendingSettlement Decimal   @default(0) @map("pending_settlement") @db.Decimal(10, 2)
+  availableBalance  Decimal   @default(0) @map("available_balance") @db.Decimal(10, 2)
+  createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt         DateTime  @updatedAt @map("updated_at") @db.Timestamp(6)
+
+  user User @relation(fields: [userId], references: [id])
+
+  services           ConsultantService[]
+  serviceAreas       ConsultantServiceArea[]
+  demandsAsConsultant Demand[]              @relation("ConsultantDemands")
+  demandApplications DemandApplication[]
+  ordersAsConsultant Order[]                @relation("ConsultantOrders")
+  walletTransactions ConsultantWalletTransaction[]
+  withdrawals        ConsultantWithdrawal[]
+
+  @@index([status])
+  @@index([rating])
+  @@index([onlineStatus])
+  @@index([creditScore])
+  @@map("consultants")
+}
+
+model ConsultantService {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  consultantId String @map("consultant_id") @db.Uuid
+  categoryId String   @map("category_id") @db.Uuid
+  serviceMode Int     @map("service_mode") @db.SmallInt // 1线下/2线上
+  pricePerHour Decimal @map("price_per_hour") @db.Decimal(10, 2)
+  minDuration Int     @map("min_duration") // 最短时长(分钟)
+  maxDuration Int     @map("max_duration") // 最长时长(分钟)
+  isActive    Boolean @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamp(6)
+
+  consultant Consultant       @relation(fields: [consultantId], references: [id])
+  category   ServiceCategory  @relation(fields: [categoryId], references: [id])
+
+  @@unique([consultantId, categoryId, serviceMode])
+  @@index([consultantId])
+  @@index([categoryId])
+  @@map("consultant_services")
+}
+
+model ConsultantServiceArea {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  consultantId String   @map("consultant_id") @db.Uuid
+  cityId       String   @map("city_id") @db.Uuid
+  radius       Int      @default(10000) // 服务半径(米)
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamp(6)
+
+  consultant Consultant @relation(fields: [consultantId], references: [id])
+  city       City       @relation(fields: [cityId], references: [id])
+
+  @@unique([consultantId, cityId])
+  @@index([consultantId])
+  @@index([cityId])
+  @@map("consultant_service_areas")
+}
+
+model ConsultantWalletTransaction {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  consultantId  String   @map("consultant_id") @db.Uuid
+  transactionType Int    @map("transaction_type") @db.SmallInt // 1收入待结算/2结算到账/3打赏收入/4提现申请/5退款扣除
+  amount        Decimal  @db.Decimal(10, 2)
+  balanceBefore Decimal  @map("balance_before") @db.Decimal(10, 2)
+  balanceAfter  Decimal  @map("balance_after") @db.Decimal(10, 2)
+  relatedId     String?  @map("related_id") @db.Uuid // 关联订单/提现ID
+  description   String?  @db.VarChar(200)
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+
+  consultant Consultant @relation(fields: [consultantId], references: [id])
+
+  @@index([consultantId])
+  @@index([transactionType])
+  @@index([createdAt])
+  @@map("consultant_wallet_transactions")
+}
+
+model ConsultantWithdrawal {
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  consultantId String    @map("consultant_id") @db.Uuid
+  amount       Decimal   @db.Decimal(10, 2)
+  status       Int       @default(0) @db.SmallInt // 0待审核/1已通过/2已拒绝/3已完成
+  rejectReason String?   @map("reject_reason") @db.VarChar(200)
+  approvedAt   DateTime? @map("approved_at") @db.Timestamp(6)
+  completedAt  DateTime? @map("completed_at") @db.Timestamp(6)
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt    DateTime  @updatedAt @map("updated_at") @db.Timestamp(6)
+
+  consultant Consultant @relation(fields: [consultantId], references: [id])
+
+  @@index([consultantId])
+  @@index([status])
+  @@map("consultant_withdrawals")
+}
+
+// ============================================
+// 需求模块
+// ============================================
+
+model Demand {
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId          String    @map("user_id") @db.Uuid
+  categoryId      String    @map("category_id") @db.Uuid
+  serviceMode     Int       @map("service_mode") @db.SmallInt // 1线下/2线上
+  serviceTime     DateTime  @map("service_time") @db.Timestamp(6)
+  duration        Int       // 时长(分钟)
+  location        String?   @db.VarChar(200) // 线下服务地点
+  locationLat     Decimal?  @map("location_lat") @db.Decimal(10, 7)
+  locationLng     Decimal?  @map("location_lng") @db.Decimal(10, 7)
+  budget          Decimal   @db.Decimal(10, 2)
+  genderPreference Int?     @map("gender_preference") @db.SmallInt // 0无要求/1男/2女
+  ageMin          Int?      @map("age_min")
+  ageMax          Int?      @map("age_max")
+  description     String?   @db.Text
+  status          Int       @default(0) @db.SmallInt // 0待匹配/1匹配中/2已匹配/3已确认/4已取消/5已过期
+  selectedConsultantId String? @map("selected_consultant_id") @db.Uuid
+  cancelReason    String?   @map("cancel_reason") @db.VarChar(200)
+  expiredAt       DateTime? @map("expired_at") @db.Timestamp(6)
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt       DateTime  @updatedAt @map("updated_at") @db.Timestamp(6)
+
+  user              User                @relation("UserDemands", fields: [userId], references: [id])
+  category          ServiceCategory     @relation(fields: [categoryId], references: [id])
+  selectedConsultant Consultant?        @relation("ConsultantDemands", fields: [selectedConsultantId], references: [id])
+  applications      DemandApplication[]
+  locks             DemandLock[]
+
+  @@index([userId])
+  @@index([categoryId])
+  @@index([status])
+  @@index([serviceTime])
+  @@map("demands")
+}
+
+model DemandApplication {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  demandId     String   @map("demand_id") @db.Uuid
+  consultantId String   @map("consultant_id") @db.Uuid
+  quotedPrice  Decimal  @map("quoted_price") @db.Decimal(10, 2)
+  message      String?  @db.Text
+  status       Int      @default(0) @db.SmallInt // 0待处理/1已选中/2已拒绝
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamp(6)
+
+  demand     Demand     @relation(fields: [demandId], references: [id])
+  consultant Consultant @relation(fields: [consultantId], references: [id])
+
+  @@unique([demandId, consultantId])
+  @@index([demandId])
+  @@index([consultantId])
+  @@index([status])
+  @@map("demand_applications")
+}
+
+model DemandLock {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  demandId     String   @map("demand_id") @db.Uuid
+  consultantId String   @map("consultant_id") @db.Uuid
+  status       Int      @default(0) @db.SmallInt // 0锁定中/1已响应/2已超时
+  lockedAt     DateTime @default(now()) @map("locked_at") @db.Timestamp(6)
+  expiredAt    DateTime @map("expired_at") @db.Timestamp(6)
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamp(6)
+
+  demand Demand @relation(fields: [demandId], references: [id])
+
+  @@unique([demandId, consultantId])
+  @@index([demandId])
+  @@index([status])
+  @@index([expiredAt])
+  @@map("demand_locks")
+}
+
+// ============================================
+// 订单模块
+// ============================================
+
+model Order {
+  id                   String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orderNo              String    @unique @map("order_no") @db.VarChar(50)
+  userId               String    @map("user_id") @db.Uuid
+  consultantId         String    @map("consultant_id") @db.Uuid
+  demandId             String?   @map("demand_id") @db.Uuid
+  categoryId           String    @map("category_id") @db.Uuid
+  serviceMode          Int       @map("service_mode") @db.SmallInt // 1线下/2线上
+  serviceTime          DateTime  @map("service_time") @db.Timestamp(6)
+  duration             Int       // 时长(分钟)
+  location             String?   @db.VarChar(200)
+  locationLat          Decimal?  @map("location_lat") @db.Decimal(10, 7)
+  locationLng          Decimal?  @map("location_lng") @db.Decimal(10, 7)
+  totalAmount          Decimal   @map("total_amount") @db.Decimal(10, 2)
+  platformFee          Decimal   @map("platform_fee") @db.Decimal(10, 2)
+  consultantIncome     Decimal   @map("consultant_income") @db.Decimal(10, 2)
+  consultantSnapshot   Json      @map("consultant_snapshot") // 顾问信息快照
+  status               Int       @default(0) @db.SmallInt // 0待接单/1待支付/2已支付/3服务中/4待确认/5已完成/6已取消/7已退款/8已过期
+  cancelReason         String?   @map("cancel_reason") @db.VarChar(200)
+  cancelledBy          String?   @map("cancelled_by") @db.VarChar(20) // user/consultant/system
+  refundAmount         Decimal?  @map("refund_amount") @db.Decimal(10, 2)
+  acceptedAt           DateTime? @map("accepted_at") @db.Timestamp(6)
+  paidAt               DateTime? @map("paid_at") @db.Timestamp(6)
+  startedAt            DateTime? @map("started_at") @db.Timestamp(6)
+  endedAt              DateTime? @map("ended_at") @db.Timestamp(6)
+  confirmedAt          DateTime? @map("confirmed_at") @db.Timestamp(6)
+  completedAt          DateTime? @map("completed_at") @db.Timestamp(6)
+  createdAt            DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt            DateTime  @updatedAt @map("updated_at") @db.Timestamp(6)
+
+  user       User       @relation("UserOrders", fields: [userId], references: [id])
+  consultant Consultant @relation("ConsultantOrders", fields: [consultantId], references: [id])
+  payments   Payment[]
+  reviews    Review[]
+
+  @@index([orderNo])
+  @@index([userId])
+  @@index([consultantId])
+  @@index([status])
+  @@index([serviceTime])
+  @@map("orders")
+}
+
+// ============================================
+// 支付模块
+// ============================================
+
+model Payment {
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orderId         String    @map("order_id") @db.Uuid
+  userId          String    @map("user_id") @db.Uuid
+  paymentNo       String    @unique @map("payment_no") @db.VarChar(50)
+  paymentMethod   Int       @map("payment_method") @db.SmallInt // 1微信支付
+  amount          Decimal   @db.Decimal(10, 2)
+  couponId        String?   @map("coupon_id") @db.Uuid
+  couponDiscount  Decimal?  @map("coupon_discount") @db.Decimal(10, 2)
+  actualAmount    Decimal   @map("actual_amount") @db.Decimal(10, 2)
+  status          Int       @default(0) @db.SmallInt // 0待支付/1已支付/2已退款/3已取消
+  thirdPartyNo    String?   @unique @map("third_party_no") @db.VarChar(100) // 微信交易号
+  paidAt          DateTime? @map("paid_at") @db.Timestamp(6)
+  refundAmount    Decimal?  @map("refund_amount") @db.Decimal(10, 2)
+  refundedAt      DateTime? @map("refunded_at") @db.Timestamp(6)
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt       DateTime  @updatedAt @map("updated_at") @db.Timestamp(6)
+
+  order  Order  @relation(fields: [orderId], references: [id])
+  user   User   @relation("UserPayments", fields: [userId], references: [id])
+  coupon Coupon? @relation(fields: [couponId], references: [id])
+
+  @@index([orderId])
+  @@index([userId])
+  @@index([paymentNo])
+  @@index([status])
+  @@map("payments")
+}
+
+model Coupon {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  code        String    @unique @db.VarChar(50)
+  name        String    @db.VarChar(100)
+  discountType Int      @map("discount_type") @db.SmallInt // 1固定金额/2百分比
+  discountValue Decimal @map("discount_value") @db.Decimal(10, 2)
+  minAmount   Decimal?  @map("min_amount") @db.Decimal(10, 2)
+  maxDiscount Decimal?  @map("max_discount") @db.Decimal(10, 2)
+  totalCount  Int       @map("total_count")
+  usedCount   Int       @default(0) @map("used_count")
+  validFrom   DateTime  @map("valid_from") @db.Timestamp(6)
+  validUntil  DateTime  @map("valid_until") @db.Timestamp(6)
+  isActive    Boolean   @default(true) @map("is_active")
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamp(6)
+
+  payments Payment[]
+
+  @@index([code])
+  @@index([isActive])
+  @@map("coupons")
+}
+
+// ============================================
+// 评价模块
+// ============================================
+
+model Review {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orderId      String   @map("order_id") @db.Uuid
+  reviewerId   String   @map("reviewer_id") @db.Uuid
+  revieweeId   String   @map("reviewee_id") @db.Uuid
+  reviewerType Int      @map("reviewer_type") @db.SmallInt // 1用户评价顾问/2顾问评价用户
+  rating       Int      @db.SmallInt // 1-5星
+  tags         String[] @db.VarChar(50)
+  content      String?  @db.Text
+  tipAmount    Decimal? @map("tip_amount") @db.Decimal(10, 2)
+  status       Int      @default(0) @db.SmallInt // 0待审核/1显示/2审核拒绝
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamp(6)
+
+  order    Order @relation(fields: [orderId], references: [id])
+  reviewer User  @relation("ReviewerReviews", fields: [reviewerId], references: [id])
+  reviewee User  @relation("RevieweeReviews", fields: [revieweeId], references: [id])
+
+  @@unique([orderId, reviewerId])
+  @@index([orderId])
+  @@index([reviewerId])
+  @@index([revieweeId])
+  @@index([status])
+  @@map("reviews")
+}
+
+// ============================================
+// 通讯模块
+// ============================================
+
+model Conversation {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  conversationType Int   @map("conversation_type") @db.SmallInt // 1售前咨询/2订单会话
+  orderId      String?  @unique @map("order_id") @db.Uuid
+  lastMessageAt DateTime? @map("last_message_at") @db.Timestamp(6)
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamp(6)
+
+  participants ConversationParticipant[]
+  messages     Message[]
+
+  @@index([conversationType])
+  @@map("conversations")
+}
+
+model ConversationParticipant {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  conversationId String   @map("conversation_id") @db.Uuid
+  userId         String   @map("user_id") @db.Uuid
+  unreadCount    Int      @default(0) @map("unread_count")
+  lastReadAt     DateTime? @map("last_read_at") @db.Timestamp(6)
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamp(6)
+
+  conversation Conversation @relation(fields: [conversationId], references: [id])
+  user         User         @relation(fields: [userId], references: [id])
+
+  @@unique([conversationId, userId])
+  @@index([conversationId])
+  @@index([userId])
+  @@map("conversation_participants")
+}
+
+model Message {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  conversationId String   @map("conversation_id") @db.Uuid
+  senderId       String   @map("sender_id") @db.Uuid
+  messageType    Int      @map("message_type") @db.SmallInt // 1文本/2图片/3语音/4位置
+  content        String?  @db.Text
+  mediaUrl       String?  @map("media_url") @db.VarChar(500)
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+
+  conversation Conversation @relation(fields: [conversationId], references: [id])
+  sender       User         @relation(fields: [senderId], references: [id])
+
+  @@index([conversationId])
+  @@index([senderId])
+  @@index([createdAt])
+  @@map("messages")
+}
+
+// ============================================
+// 安全模块
+// ============================================
+
+model EmergencyHelp {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orderId   String   @map("order_id") @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  location  String?  @db.VarChar(200)
+  locationLat Decimal? @map("location_lat") @db.Decimal(10, 7)
+  locationLng Decimal? @map("location_lng") @db.Decimal(10, 7)
+  status    Int      @default(0) @db.SmallInt // 0待处理/1处理中/2已处理
+  handledBy String?  @map("handled_by") @db.Uuid
+  handledAt DateTime? @map("handled_at") @db.Timestamp(6)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamp(6)
+
+  @@index([orderId])
+  @@index([userId])
+  @@index([status])
+  @@map("emergency_helps")
+}
+
+model LocationShare {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orderId     String   @map("order_id") @db.Uuid
+  userId      String   @map("user_id") @db.Uuid
+  location    String?  @db.VarChar(200)
+  locationLat Decimal  @map("location_lat") @db.Decimal(10, 7)
+  locationLng Decimal  @map("location_lng") @db.Decimal(10, 7)
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+
+  @@index([orderId])
+  @@index([userId])
+  @@index([createdAt])
+  @@map("location_shares")
+}
+
+model Complaint {
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  reporterId   String    @map("reporter_id") @db.Uuid
+  reportedId   String    @map("reported_id") @db.Uuid
+  orderId      String?   @map("order_id") @db.Uuid
+  complaintType Int      @map("complaint_type") @db.SmallInt // 1骚扰/2欺诈/3服务质量/4其他
+  description  String    @db.Text
+  evidence     String[]  @db.VarChar(500)
+  status       Int       @default(0) @db.SmallInt // 0待处理/1处理中/2已处理/3已驳回
+  handledBy    String?   @map("handled_by") @db.Uuid
+  handleResult String?   @map("handle_result") @db.Text
+  handledAt    DateTime? @map("handled_at") @db.Timestamp(6)
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt    DateTime  @updatedAt @map("updated_at") @db.Timestamp(6)
+
+  reporter User @relation("ReporterComplaints", fields: [reporterId], references: [id])
+  reported User @relation("ReportedComplaints", fields: [reportedId], references: [id])
+
+  @@index([reporterId])
+  @@index([reportedId])
+  @@index([status])
+  @@map("complaints")
+}
+
+// ============================================
+// 通知模块
+// ============================================
+
+model Notification {
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId       String    @map("user_id") @db.Uuid
+  notificationType Int   @map("notification_type") @db.SmallInt // 1订单/2需求/3系统
+  title        String    @db.VarChar(100)
+  content      String    @db.Text
+  relatedId    String?   @map("related_id") @db.Uuid
+  isRead       Boolean   @default(false) @map("is_read")
+  readAt       DateTime? @map("read_at") @db.Timestamp(6)
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([isRead])
+  @@index([createdAt])
+  @@map("notifications")
+}
+
+// ============================================
+// 管理后台模块
+// ============================================
+
+model Admin {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  username  String   @unique @db.VarChar(50)
+  password  String   @db.VarChar(100) // bcrypt加密
+  nickname  String   @db.VarChar(50)
+  email     String?  @db.VarChar(100)
+  role      String   @db.VarChar(50) // super_admin/admin/operator
+  status    Int      @default(1) @db.SmallInt // 0禁用/1正常
+  lastLoginAt DateTime? @map("last_login_at") @db.Timestamp(6)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamp(6)
+
+  @@index([username])
+  @@index([status])
+  @@map("admins")
+}
+
+model SystemConfig {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  key       String   @unique @db.VarChar(100)
+  value     String   @db.Text
+  description String? @db.VarChar(200)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamp(6)
+
+  @@index([key])
+  @@map("system_configs")
+}

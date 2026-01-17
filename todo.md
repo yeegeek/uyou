@@ -151,8 +151,8 @@
 - [ ] **Docker 环境准备**
   - [ ] 安装 Docker Desktop/Engine、docker-compose，验证版本
 
-- [ ] **创建 docker-compose.yml**
-  - [ ] 配置 PostgreSQL（PostGIS扩展）、Redis、网络和卷挂载、环境变量文件
+- [x] **创建 docker-compose.yml**
+  - [x] 配置 PostgreSQL（PostGIS扩展）、Redis、网络和卷挂载、环境变量文件
 
 - [ ] **创建 Dockerfile**
   - [ ] 配置多阶段构建（开发/生产）、热重载支持
@@ -162,35 +162,38 @@
 
 ### 项目初始化
 
-- [ ] **后端项目初始化**
-  - [ ] 创建 NestJS 项目，配置 TypeScript（严格模式）、ESLint + Prettier、Git、环境变量管理
+- [x] **后端项目初始化**
+  - [x] 创建 NestJS 项目，配置 TypeScript（严格模式）、ESLint + Prettier、Git、环境变量管理
 
-- [ ] **数据库初始化**
-  - [ ] 配置 Prisma ORM，创建 Schema（基于模块文档），配置数据库连接，执行迁移，验证 PostGIS，配置连接池，确认共享表定义
+- [x] **数据库初始化**
+  - [x] 配置 Prisma ORM，创建 Schema（基于模块文档），配置数据库连接，执行迁移，验证 PostGIS，配置连接池，确认共享表定义
 
 - [ ] **Redis 初始化**
   - [ ] 配置 Redis 连接，缓存策略，分布式锁，缓存服务（失效更新、主动更新、预热缓存）
 
 ### 公共模块搭建
 
-- [ ] **Common 模块**
-  - [ ] 异常过滤器、响应拦截器、日志拦截器、验证管道、装饰器（@User(), @Roles()）、工具函数（加密、解密、格式化）、常量定义（错误码）、统一推送服务、时间字段转换工具、分页工具函数、接口限流中间件、数据脱敏工具函数
+- [x] **Common 模块**
+  - [x] 异常过滤器、响应拦截器、验证管道、装饰器（@User()）、常量定义（错误码）已完成
+  - [ ] 日志拦截器、工具函数（加密、解密、格式化）、统一推送服务、时间字段转换工具、分页工具函数、数据脱敏工具函数待补充
 
-- [ ] **Config 模块**
-  - [ ] 数据库配置、Redis 配置、微信配置、腾讯云配置、JWT 配置、环境变量验证
+- [x] **Config 模块**
+  - [x] 数据库配置、Redis 配置、微信配置、腾讯云配置、JWT 配置、环境变量验证
 
-- [ ] **Database 模块**
-  - [ ] Prisma Service、数据库连接管理、迁移脚本管理
+- [x] **Database 模块**
+  - [x] Prisma Service、数据库连接管理、迁移脚本管理
 
 ### 认证基础
 
-- [ ] **Auth 模块基础**
-  - [ ] 安装依赖（@nestjs/jwt, @nestjs/passport, passport-jwt），创建 JWT Strategy、JWT Auth Guard、Roles Guard，实现 Token 生成/验证/刷新
+- [x] **Auth 模块基础**
+  - [x] 安装依赖（@nestjs/jwt, @nestjs/passport, passport-jwt），创建 JWT Strategy、JWT Auth Guard、实现 Token 生成/验证/刷新
+  - [ ] Roles Guard待补充
 
 ### 开发工具配置
 
-- [ ] **开发环境**
-  - [ ] 配置热重载、API 文档（Swagger/OpenAPI）、调试配置、接口限流
+- [x] **开发环境**
+  - [x] 配置热重载、API 文档（Swagger/OpenAPI）、接口限流
+  - [ ] 调试配置待补充
 
 - [ ] **测试环境**
   - [ ] 配置单元测试（Jest）、E2E 测试、测试数据库配置
