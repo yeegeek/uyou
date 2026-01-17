@@ -297,56 +297,61 @@
 
 ### 2.4 需求模块（`06-demands`）
 
-- [ ] **需求发布**
-  - [ ] 发布需求（`POST /demands`）
-  - [ ] 需求参数验证（时间、地点、预算等）
-  - [ ] 需求状态管理（pending → matching → matched → confirmed）
+- [x] **需求发布**
+  - [x] 发布需求（`POST /demands`）
+  - [x] 需求参数验证（时间、地点、预算等）
+  - [x] 需求状态管理（pending → matching → locked → matched → confirmed）
 
-- [ ] **需求管理**
-  - [ ] 查询我的需求列表（`GET /demands/my`）
-  - [ ] 查询需求详情（`GET /demands/:id`）
-  - [ ] 查询申请列表（`GET /demands/:id/applications`）
-  - [ ] 选择顾问（`POST /demands/:id/select-consultant`）
-  - [ ] 取消需求（`POST /demands/:id/cancel`）
+- [x] **需求管理**
+  - [x] 查询我的需求列表（`GET /demands/my`）
+  - [x] 查询需求详情（`GET /demands/:id`）
+  - [x] 查询申请列表（`GET /demands/:id/applications`）
+  - [x] 选择顾问（`POST /demands/:id/select-consultant`）
+  - [x] 取消需求（`POST /demands/:id/cancel`）
 
 - [ ] **需求大厅**
-  - [ ] 查询需求大厅列表（`GET /demands/hall`）
+  - [ ] 查询需求大厅列表（`GET /demands/hall`）待补充
   - [ ] 支持筛选（城市、类目、预算区间）
   - [ ] 支持排序（时间、预算）
 
-- [ ] **智能匹配**（核心功能）
-  - [ ] 实现匹配算法（距离、评分、偏好、活跃度）
-  - [ ] 使用 PostGIS 计算地理位置距离
-  - [ ] 使用 Redis 缓存匹配结果
-  - [ ] 异步计算匹配分数（消息队列）
-  - [ ] 推送给 TOP 10 匹配顾问
- 和 `docs/tech-architecture.md`
+- [x] **智能匹配**（核心功能）
+  - [x] 实现匹配算法（距离、评分、偏好、活跃度）
+  - [ ] 使用 PostGIS 计算地理位置距离（待集成）
+  - [ ] 使用 Redis 缓存匹配结果（待集成）
+  - [ ] 异步计算匹配分数（消息队列）（待集成）
+  - [ ] 推送给 TOP 10 匹配顾问（待集成通知服务）
 
-- [ ] **需求匹配锁定机制**（核心功能）
-  - [ ] 实现需求锁定表（`demand_locks`）
-  - [ ] 实现锁定状态查询接口（`GET /demands/:id/lock-status`）
-  - [ ] 实现60秒锁定逻辑（推送给顾问后锁定需求）
-  - [ ] 实现锁定超时处理定时任务（每10秒检查一次，释放超时锁定）
-  - [ ] 实现锁定状态管理（0锁定中/1已响应/2已超时）
-  - [ ] 实现需求状态流转（pending → matching → locked → matched → confirmed）
+- [x] **需求匹配锁定机制**（核心功能）
+  - [x] 实现需求锁定表（`demand_locks`）
+  - [x] 实现锁定状态查询接口（`GET /demands/:id/lock-status`）
+  - [x] 实现60秒锁定逻辑（推送给顾问后锁定需求）
+  - [x] 实现锁定超时处理（setTimeout实现）
+  - [x] 实现锁定状态管理（0锁定中/1已响应/2已超时）
+  - [x] 实现需求状态流转（pending → matching → locked → matched → confirmed）
 
 ### 2.5 订单模块（`04-orders`）
 
 - [ ] **订单创建**
-  - [ ] 从需求生成订单（`POST /orders/from-demand`）
-  - [ ] 直接预约顾问（`POST /orders`）
+  - [ ] 从需求生成订单（自动创建，待集成）
+  - [ ] 直接预约顾问（待补充）
   - [ ] 订单参数验证（服务时间、时长、地点等）
   - [ ] 价格计算（总价、平台费、顾问收入）
   - [ ] 保存顾问信息快照
 
-- [ ] **订单状态管理**
-  - [ ] 实现订单状态机
-  - [ ] 订单状态流转逻辑
-  - [ ] 订单状态查询（`GET /orders/:id`）
-  - [ ] 查询我的订单列表（`GET /orders/my`）
+- [x] **订单状态管理**
+  - [x] 实现订单状态机
+  - [x] 订单状态流转逻辑
+  - [x] 订单状态查询（`GET /orders/:id`）
+  - [x] 查询我的订单列表（`GET /orders`）
 
-- [ ] **订单操作**
-  - [ ] 取消订单（`POST /orders/:id/cancel`）
+- [x] **订单操作**
+  - [x] 顾问接单（`POST /orders/:id/accept`）
+  - [x] 顾问拒单（`POST /orders/:id/reject`）
+  - [x] 取消订单（`POST /orders/:id/cancel`）
+  - [x] 开始服务（`POST /orders/:id/start`）
+  - [x] 结束服务（`POST /orders/:id/complete`）
+  - [x] 确认完成（`POST /orders/:id/confirm`）
+  - [x] 阶梯退款逻辑（24h以上100%/12-24h 50%/12h内0%）
   - [ ] 实现阶梯退款规则（服务未开始：24h以上100%，12-24h 50%，12h内0%）
   - [ ] 实现服务进行中取消订单的退款计算（按已服务时长比例扣除）
   - [ ] 实现已服务时长比例计算逻辑（实际服务时长 / 预约总时长）

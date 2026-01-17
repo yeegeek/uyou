@@ -13,6 +13,8 @@ import { CommonModule } from './common/common.module';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { DiscoveryModule } from './discovery/discovery.module';
+import { DemandsModule } from './demands/demands.module';
+import { OrdersModule } from './orders/orders.module';
 
 import { ResponseInterceptor } from './common/interceptors/response.interceptor';
 import { HttpExceptionFilter, AllExceptionsFilter } from './common/filters/http-exception.filter';
@@ -26,6 +28,8 @@ import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
     AuthModule,
     UsersModule,
     DiscoveryModule,
+    DemandsModule,
+    OrdersModule,
     ThrottlerModule.forRoot([
       {
         ttl: 60000,
