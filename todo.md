@@ -224,47 +224,48 @@
 
 ### 2.1 认证模块（`02-auth`）
 
-- [ ] **微信登录**
-  - [ ] 实现微信登录接口（`POST /auth/wechat/login`）
-  - [ ] 获取微信 OpenID/UnionID
-  - [ ] 创建/更新用户记录
-  - [ ] 返回 JWT Token
+- [x] **微信登录**
+  - [x] 实现微信登录接口（`POST /auth/wechat/login`）
+  - [ ] 获取微信 OpenID/UnionID（待集成微信API）
+  - [x] 创建/更新用户记录
+  - [x] 返回 JWT Token
 
-- [ ] **手机号绑定**
-  - [ ] 实现手机号绑定接口（`POST /auth/wechat/bind-phone`）
-  - [ ] 验证微信手机号授权
-  - [ ] 更新用户手机号（加密存储）
+- [x] **手机号绑定**
+  - [x] 实现手机号绑定接口（`POST /auth/wechat/bind-phone`）
+  - [ ] 验证微信手机号授权（待集成）
+  - [x] 更新用户手机号（加密存储待实现）
 
-- [ ] **Token 刷新**
-  - [ ] 实现 Token 刷新接口（`POST /auth/refresh`）
-  - [ ] 验证 Refresh Token
-  - [ ] 返回新的 Access Token
+- [x] **Token 刷新**
+  - [x] 实现 Token 刷新接口（`POST /auth/refresh`）
+  - [x] 验证 Refresh Token
+  - [x] 返回新的 Access Token
 
 ### 2.2 用户模块（`01-users`）
 
-- [ ] **用户信息管理**
-  - [ ] 获取当前用户信息（`GET /users/me`）
-  - [ ] 更新用户信息（`PATCH /users/me`）
-  - [ ] 上传头像（集成腾讯云COS）
+- [x] **用户信息管理**
+  - [x] 获取当前用户信息（`GET /users/me`）
+  - [x] 更新用户信息（`PATCH /users/me`）
+  - [ ] 上传头像（集成腾讯云COS）待补充
 
-- [ ] **实名认证**
-  - [ ] 提交实名认证（`POST /users/verification`）
-  - [ ] 调用实名认证API（身份证+人脸识别）
-  - [ ] 保存认证信息（加密存储）
-  - [ ] 查询认证状态（`GET /users/verification`）
+- [x] **实名认证**
+  - [x] 提交实名认证（`POST /users/verification`）
+  - [ ] 调用实名认证API（身份证+人脸识别）待集成
+  - [x] 保存认证信息（加密存储待实现）
+  - [x] 查询认证状态（`GET /users/verification/status`）
 
-- [ ] **紧急联系人**
-  - [ ] 设置紧急联系人（`POST /users/emergency-contacts`）
-  - [ ] 查询紧急联系人（`GET /users/emergency-contacts`）
-  - [ ] 更新/删除紧急联系人
+- [x] **紧急联系人**
+  - [x] 设置紧急联系人（`POST /users/emergency-contacts`）
+  - [x] 查询紧急联系人（`GET /users/emergency-contacts`）
+  - [x] 删除紧急联系人（`DELETE /users/emergency-contacts/:id`）
 
-- [ ] **收藏与屏蔽**
-  - [ ] 收藏顾问（`POST /users/favorites`）
-  - [ ] 取消收藏（`DELETE /users/favorites/:id`）
-  - [ ] 查询收藏列表（`GET /users/favorites`）
-  - [ ] 屏蔽顾问（`POST /users/blocks`）
-  - [ ] 查询屏蔽列表（`GET /users/blocks`）
-  - [ ] 统一收藏和屏蔽API定义（移除发现模块中的重复定义，统一到用户模块）
+- [x] **收藏与屏蔽**
+  - [x] 收藏顾问（`POST /users/favorites`）
+  - [x] 取消收藏（`DELETE /users/favorites/:id`）
+  - [x] 查询收藏列表（`GET /users/favorites`）
+  - [x] 屏蔽顾问（`POST /users/blocks`）
+  - [x] 取消屏蔽（`DELETE /users/blocks/:id`）
+  - [x] 查询屏蔽列表（`GET /users/blocks`）
+  - [x] 统一收藏和屏蔽API定义（移除发现模块中的重复定义，统一到用户模块）
  4.2
 
 ### 2.3 发现模块（`13-discovery`）
